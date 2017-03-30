@@ -11,3 +11,9 @@ body {
 #food-search {
   margin-top: 5em;
 }
+
+footer{
+  text-align: center;
+  height: 100px;
+  line-height: 100px;
+}

@@ -18,6 +18,7 @@ class App extends Component {
           <h1>TollBooth TCP flow</h1>
           <Log />
         </div>
+        <footer> ©Comcast 2017</footer>
       </div>
     );
   }

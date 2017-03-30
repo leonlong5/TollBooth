@@ -23,10 +23,11 @@ class FMDSLog extends React.Component {
   }
 
 
+
   render() {
     return (
 
-          <div className="log-data">
+          <div className="FMDSlog-data">
 
               <div className="ui message FMDSLog">
 

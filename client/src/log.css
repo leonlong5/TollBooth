@@ -1,4 +1,4 @@
-.log-data{
+.log-data, .FMDSlog-data{
   margin-top: 50px;
   max-height: 600px;
   overflow: scroll;

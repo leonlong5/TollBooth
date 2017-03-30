@@ -1,17 +1,13 @@
 const express = require('express');
 const fs = require('fs');
-const sqlite = require('sql.js');
+const app = express();
+const request = require("request");
 
-const WebSocket = require('ws');
 
-const WebSocketServer = WebSocket.Server;
-
-const wss = new WebSocketServer({
-    perMessageDeflate: false,
-    port: 2223
-});
+// initiate websocket
+const wss = require('./server/websocket.js');
 var CLIENTS=[];
-//const wsInstance = null;
+//listening websocket connection, excuted once connection established
 wss.on('connection', function (ws) {
     console.log(`[SERVER] connection()`);
     CLIENTS.push(ws);
@@ -23,22 +19,20 @@ wss.on('connection', function (ws) {
 });
 
 
-const filebuffer = fs.readFileSync('db/usda-nnd.sqlite3');
-const db = new sqlite.Database(filebuffer);
-const app = express();
 
+//setup server environment
 app.set('port', (process.env.PORT || 3001));
-
-const request = require("request");
-var data, sessiontoken, bearertoken, subscribeRes, FMDSLog;
-
 // Express only serves static assets in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static('client/build'));
 }
+var data, sessiontoken, bearertoken, subscribeRes, FMDSLog;
 
 
-request.post({
+
+//const data = require('./server/channelAPI.js');
+const initiateChannelAPI = () => {
+  request.post({
     url: 'http://fabricdemo.xidio.com/fmds/api/watchable/web/authenticate',
     headers: {
       'Connection':'close',
@@ -80,7 +74,7 @@ request.post({
           //authenticate api, GET bearertoken
           request.post({
               //url: 'http://fabricdemo.xidio.com/fmds/api/watchable/web/users/authenticate',
-              url: 'http://fabricdemo.xidio.com/fmds/api/watchable/stb/users/auto/login/a50c42f1556c350e4e62dd182ba6ce5bc5e411dacb2bea0afb5bb60a52e8a014',
+              url: 'http://fabricdemo.xidio.com/fmds/api/watchable/stb/users/auto/login/3621c96bcdc8fc8e8a121ae6e537a495e6acf8b5a043648d8e1ca317a6ca92b0',
               headers: {
                 'Connection':'close',
                 'Content-Type': 'text/plain,application/json',
@@ -100,7 +94,9 @@ request.post({
 
         }
     }
-);
+  )
+}
+initiateChannelAPI();
 
 
 const subscribeAPI = () =>{
@@ -124,11 +120,23 @@ const subscribeAPI = () =>{
       //console.log(JSON.stringify(response));
     }
   });
+
+  request.get({
+    url: "http://fabricdemo.xidio.com/fmds/uapi/watchable/stb/users/channels/13216/subscription",
+    headers: {
+      "SessionToken": sessiontoken,
+      "Authorization": bearertoken
+    }
+    }, function(error, response, body) {
+      if(!error && response.statusCode == 200) {
+          CLIENTS[0].send(JSON.stringify(response));
+      }else {
+          CLIENTS[0].send(JSON.stringify(response));
+      }
+  })
 }
 
 app.get('/channel', (req, res) => {
-    //console.log("req info here :" + req);
-    //console.log(data);
     //console.log("sessiontoken: " + sessiontoken);
     //console.log("bearetoken: " + bearertoken);
     res.json(data);
