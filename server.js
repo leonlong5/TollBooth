@@ -3,9 +3,15 @@ const fs = require('fs');
 const app = express();
 const request = require("request");
 
+// initiate websocketconst WebSocket = require('ws');
+const WebSocket = require('ws');
 
-// initiate websocket
-const wss = require('./server/websocket.js');
+const WebSocketServer = WebSocket.Server;
+
+const wss = new WebSocketServer({
+    perMessageDeflate: false,
+    port: 2223
+});
 var CLIENTS=[];
 //listening websocket connection, excuted once connection established
 wss.on('connection', function (ws) {
@@ -111,12 +117,16 @@ const subscribeAPI = () =>{
   }, function(error, response, body) {
     if (!error && response.statusCode == 200) {
          subscribeRes = response;
-         CLIENTS[0].send(JSON.stringify(response));
+         console.log(CLIENTS);
+         if(CLIENTS[0] !== undefined){
+            CLIENTS[0].send(JSON.stringify(response));
+         }
          //console.log("subscribe api: success " + JSON.stringify(response));
     }else{
       //console.log("subscribe api error: "+ response.statusCode);
-
-      CLIENTS[0].send(JSON.stringify(response));
+      if(CLIENTS[0] !== undefined){
+        CLIENTS[0].send(JSON.stringify(response));
+      }
       //console.log(JSON.stringify(response));
     }
   });
@@ -129,9 +139,13 @@ const subscribeAPI = () =>{
     }
     }, function(error, response, body) {
       if(!error && response.statusCode == 200) {
+        if(CLIENTS[0] !== undefined){
           CLIENTS[0].send(JSON.stringify(response));
+        }
       }else {
+        if(CLIENTS[0] !== undefined){
           CLIENTS[0].send(JSON.stringify(response));
+        }
       }
   })
 }
