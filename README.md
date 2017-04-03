@@ -1,11 +1,11 @@
 
-# `create-react-app` with a server example
+# TollBooth
 
 ## Running locally
 
 ```
-git clone git@github.com:fullstackreact/food-lookup-demo.git
-cd food-lookup-demo
+git clone https://github.com/leonlong5/TollBooth.git
+cd TollBooth
 npm i
 
 cd client
@@ -17,7 +17,7 @@ npm start
 
 ## Overview
 
-`create-react-app` configures a Webpack development server to run on `localhost:3000`. This development server will bundle all static assets located under `client/src/`. All requests to `localhost:3000` will serve `client/index.html` which will include Webpack's `bundle.js`.
+This app configures a Webpack development server to run on `localhost:3000`. This development server will bundle all static assets located under `client/src/`. All requests to `localhost:3000` will serve `client/index.html` which will include Webpack's `bundle.js`.
 
 To prevent any issues with CORS, the user's browser will communicate exclusively with the Webpack development server.
 
@@ -25,7 +25,7 @@ Inside `Client.js`, we use Fetch to make a request to the API:
 
 ```js
 // Inside Client.js
-return fetch(`/api/food?q=${query}`, {
+return fetch(`/api/channel, {
   // ...
 })
 ```
@@ -37,7 +37,7 @@ This request is made to `localhost:3000`, the Webpack dev server. Webpack will i
 "proxy": "http://localhost:3001/",
 ```
 
-This handy features is provided for us by `create-react-app`.
+This handy features is provided for us
 
 Therefore, the user's browser makes a request to Webpack at `localhost:3000` which then proxies the request to our API server at `localhost:3001`:
 
@@ -106,7 +106,7 @@ git commit -m 'Adding `build` to source control'
 **3. Create the Heroku app**
 
 ```
-heroku apps:create food-lookup-demo
+heroku apps:create tollbooth
 ```
 
 **4. Push to Heroku**
