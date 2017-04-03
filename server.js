@@ -2,21 +2,15 @@ const express = require('express');
 const fs = require('fs');
 const app = express();
 const request = require("request");
+const wss = require('./server/websocket');
+
 
 // initiate websocketconst WebSocket = require('ws');
-const WebSocket = require('ws');
-
-const WebSocketServer = WebSocket.Server;
-
-const wss = new WebSocketServer({
-    perMessageDeflate: false,
-    port: 2223
-});
-var CLIENTS=[];
+var globalWS;
 //listening websocket connection, excuted once connection established
 wss.on('connection', function (ws) {
     console.log(`[SERVER] connection()`);
-    CLIENTS.push(ws);
+    globalWS = ws;
     ws.send(FMDSLog, (err) => {
         if (err) {
             console.log(`[SERVER] error: ${err}`);
@@ -51,7 +45,7 @@ const initiateChannelAPI = () => {
         if (!error && response.statusCode == 200) {
         }else{
           sessiontoken = response.headers.sessiontoken.toString();
-          //CLIENTS[0].send({'test':'test'});
+          //globalWS.send({'test':'test'});
           //get the channel metadata
           request({
             url: 'http://fabricdemo.xidio.com/fmds/api/watchable/web/channels/13216',
@@ -63,11 +57,6 @@ const initiateChannelAPI = () => {
             if (!error && response.statusCode == 200) {
                data = JSON.parse(body);
                FMDSLog = (JSON.stringify(response));
-              //      wsInstance.send("response", (err) => {
-              //          if (err) {
-              //              console.log(`[SERVER] error: ${err}`);
-              //          }
-              //  });
                //console.log("data: " + data);
             }else{
               //console.log("Channel metadata error: "+ response.statusCode);
@@ -80,7 +69,7 @@ const initiateChannelAPI = () => {
           //authenticate api, GET bearertoken
           request.post({
               //url: 'http://fabricdemo.xidio.com/fmds/api/watchable/web/users/authenticate',
-              url: 'http://fabricdemo.xidio.com/fmds/api/watchable/stb/users/auto/login/3621c96bcdc8fc8e8a121ae6e537a495e6acf8b5a043648d8e1ca317a6ca92b0',
+              url: 'http://fabricdemo.xidio.com/fmds/api/watchable/stb/users/auto/login/fefb411838ae8701b7edb5730005ed117ac3f41684199a219fa0e73e10856bba',
               headers: {
                 'Connection':'close',
                 'Content-Type': 'text/plain,application/json',
@@ -116,17 +105,23 @@ const subscribeAPI = () =>{
     }
   }, function(error, response, body) {
     if (!error && response.statusCode == 200) {
+      console.log("response subscribe: "+ JSON.stringify(response));
          subscribeRes = response;
-         console.log(CLIENTS);
-         if(CLIENTS[0] !== undefined){
-            CLIENTS[0].send(JSON.stringify(response));
-         }
+         if(globalWS !== undefined){
+            globalWS.send(JSON.stringify(response),(err) => {
+                if (err) {
+                    console.log(`[websocket SERVER] error: ${err}`);
+                }
+            });
+        }
          //console.log("subscribe api: success " + JSON.stringify(response));
     }else{
       //console.log("subscribe api error: "+ response.statusCode);
-      if(CLIENTS[0] !== undefined){
-        CLIENTS[0].send(JSON.stringify(response));
-      }
+      console.log(JSON.stringify(response));
+        globalWS.send(JSON.stringify(response), function(error){
+          console.log("websocket error :" + error);
+        });
+
       //console.log(JSON.stringify(response));
     }
   });
@@ -139,13 +134,12 @@ const subscribeAPI = () =>{
     }
     }, function(error, response, body) {
       if(!error && response.statusCode == 200) {
-        if(CLIENTS[0] !== undefined){
-          CLIENTS[0].send(JSON.stringify(response));
-        }
+
+          globalWS.send(JSON.stringify(response));
+
       }else {
-        if(CLIENTS[0] !== undefined){
-          CLIENTS[0].send(JSON.stringify(response));
-        }
+          globalWS.send(JSON.stringify(response));
+
       }
   })
 }
@@ -167,6 +161,7 @@ app.get('/subscribe', (req, res) => {
         checkRes();
       }, 400);
     }else{
+      if(subscribeRes)
       res.json(subscribeRes);
     }
   }
